@@ -1,4 +1,4 @@
-# Forecasting-model-for-a-real-estate-market
+# Prediction-model-for-a-real-estate-market
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -13,7 +13,7 @@
 
 This repository is the first project of the master's degree in AI Engineering with [Profession AI](https://profession.ai), all the credits for the requests and idea go to this team.
 
-RealEstateAI Solutions aims to optimize real estate price valuation through the use of advanced regularization techniques in linear regression models. The goal is to provide more accurate and reliable price forecasts, reducing the risk of overfitting and improving the generalization ability of the model. In the real estate industry, obtaining accurate property price estimates is crucial to make informed decisions. However, traditional linear regression models can suffer from overfitting, compromising the accuracy of the forecasts. Effective regularization methods need to be explored to improve the predictive performance and manage the complexity of the model. By implementing and comparing regularization methods such as Lasso, Ridge and Elastic Net, RealEstateAI Solutions will offer a system capable of providing more accurate and stable real estate price forecasts. This will allow real estate agents and investors to make decisions based on more reliable data, increasing their competitiveness in the market.
+RealEstateAI Solutions aims to optimize real estate price valuation through the use of advanced regularization techniques in linear regression models. The goal is to provide more accurate and reliable price predicts, reducing the risk of overfitting and improving the generalization ability of the model. In the real estate industry, obtaining accurate property price estimates is crucial to make informed decisions. However, traditional linear regression models can suffer from overfitting, compromising the accuracy of the predicts. Effective regularization methods need to be explored to improve the predictive performance and manage the complexity of the model. By implementing and comparing regularization methods such as Lasso, Ridge and Elastic Net, RealEstateAI Solutions will offer a system capable of providing more accurate and stable real estate price predicts. This will allow real estate agents and investors to make decisions based on more reliable data, increasing their competitiveness in the market.
 
 Project Steps:
 - Dataset Preprocessing
