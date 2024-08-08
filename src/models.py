@@ -43,10 +43,17 @@ def evaluate_model(model, X_test, y_test, X_train, y_train):
     print(f'R^2 Score for Test set: {r2_test:.4f}')
 
 
+def count_non_zero_coefficients(model, X_train):
+
+    coeff = model.coef_
+    no_zero_count = np.sum(coeff != 0)
+    return no_zero_count
+
+
 # Function to do K-Fold Cross-Validation with different Linear models
 def evaluate_models_with_kfold(X, y, model_types, k=5, alpha = 1.0, l1_ratio = 0.5):
     kf_cv = KFold(n_splits = k, shuffle = True, random_state = RANDOM_SEED)
-    results = {model_type : {'train_mse': [], 'test_mse': []} for model_type in model_types}
+    results = {model_type : {'train_mse': [], 'test_mse': [], 'non_zero_coeff': []} for model_type in model_types}
 
     for i, (idx_train,idx_test) in enumerate(kf_cv.split(X)):
         print("-"*30)
@@ -67,8 +74,12 @@ def evaluate_models_with_kfold(X, y, model_types, k=5, alpha = 1.0, l1_ratio = 0
             train_mse = mean_squared_error(y_train, y_train_pred)
             test_mse = mean_squared_error(y_test, y_test_pred)
 
+            non_zero_count = count_non_zero_coefficients(model, X_train_scaled)
+
             results[model_type]['train_mse'].append(train_mse)
             results[model_type]['test_mse'].append(test_mse)
+            results[model_type]['non_zero_coeff'].append(non_zero_count)
+
         print("-"*30)
 
     return results
@@ -121,4 +132,41 @@ def plot_mse_summary(results):
 
     #fig.show()
 
-    return fig
+    return fig, summary_df
+
+
+#Function to see models complexity with Non-Zero Coefficients
+def plot_model_complexity(results):
+    complexity_data = []
+    for model_type, res in results.items():
+        non_zero_mean = np.mean(res['non_zero_coeff'])
+        non_zero_std = np.std(res['non_zero_coeff'])
+
+        complexity_data.append({
+            'Model': model_type,
+            'Mean_Non_Zero_Coefficients': non_zero_mean,
+            'Std_Non_Zero_Coefficients': non_zero_std
+        })
+
+    complexity_df = pd.DataFrame(complexity_data)
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(
+        x=complexity_df['Model'],
+        y=complexity_df['Mean_Non_Zero_Coefficients'],
+        text=complexity_df['Mean_Non_Zero_Coefficients'],
+        textposition='inside',  
+        error_y=dict(type='data', array=complexity_df['Std_Non_Zero_Coefficients'], visible=True),
+        name='Complexity (Non-Zero Coefficients)'
+    ))
+
+    fig.update_layout(
+        title='Complexity Comparison for each model (Coefficients not zero)',
+        xaxis_title='Model',
+        yaxis_title='Mean Number of Non Zero Coefficients',
+        barmode='group',
+        template='plotly_white'
+    )
+
+    fig.show()
