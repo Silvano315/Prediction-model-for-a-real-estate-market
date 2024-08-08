@@ -12,7 +12,7 @@ from src.data_engineering import feature_scaling_standardization
 def train_model(X_train, y_train, model_type = 'linear', alpha = 1.0, l1_ratio = 0.5):
 
     if model_type == 'linear':
-        model = LinearRegression()
+        model = LinearRegression(n_jobs=-1)
     elif model_type == 'ridge':
         model = Ridge(alpha)
     elif model_type == 'lasso':
@@ -43,6 +43,7 @@ def evaluate_model(model, X_test, y_test, X_train, y_train):
     print(f'R^2 Score for Test set: {r2_test:.4f}')
 
 
+# Function to count Non-Zero Coefficients
 def count_non_zero_coefficients(model, X_train):
 
     coeff = model.coef_
@@ -53,7 +54,13 @@ def count_non_zero_coefficients(model, X_train):
 # Function to do K-Fold Cross-Validation with different Linear models
 def evaluate_models_with_kfold(X, y, model_types, k=5, alpha = 1.0, l1_ratio = 0.5):
     kf_cv = KFold(n_splits = k, shuffle = True, random_state = RANDOM_SEED)
-    results = {model_type : {'train_mse': [], 'test_mse': [], 'non_zero_coeff': []} for model_type in model_types}
+    results = {model_type : {'train_mse': [], 'test_mse': [], 
+                             'train_r2': [], 'test_r2': [], 
+                             'train_rmse': [], 'test_rmse': [], 
+                             'non_zero_coeff': []} for model_type in model_types}
+    y_true_pred = {model_type : {
+        'y_true': [], 'y_pred': []
+    } for model_type in model_types}
 
     for i, (idx_train,idx_test) in enumerate(kf_cv.split(X)):
         print("-"*30)
@@ -70,42 +77,52 @@ def evaluate_models_with_kfold(X, y, model_types, k=5, alpha = 1.0, l1_ratio = 0
 
             y_train_pred = model.predict(X_train_scaled)
             y_test_pred = model.predict(X_test_scaled)
+            y_true_pred[model_type]['y_true'].append(y_test)
+            y_true_pred[model_type]['y_pred'].append(y_test_pred)
 
             train_mse = mean_squared_error(y_train, y_train_pred)
             test_mse = mean_squared_error(y_test, y_test_pred)
-
+            train_r2 = r2_score(y_train, y_train_pred)
+            test_r2 = r2_score(y_test, y_test_pred)
+            train_rmse = np.sqrt(mean_squared_error(y_train, y_train_pred))
+            test_rmse = np.sqrt(mean_squared_error(y_test, y_test_pred))
             non_zero_count = count_non_zero_coefficients(model, X_train_scaled)
 
             results[model_type]['train_mse'].append(train_mse)
             results[model_type]['test_mse'].append(test_mse)
+            results[model_type]['train_r2'].append(train_r2)
+            results[model_type]['test_r2'].append(test_r2)
+            results[model_type]['train_rmse'].append(train_rmse)
+            results[model_type]['test_rmse'].append(test_rmse)
             results[model_type]['non_zero_coeff'].append(non_zero_count)
 
         print("-"*30)
 
-    return results
+    return results, y_true_pred
 
 
 # Functiom to show a bar chart about mean and std of MSE values for each model and for both train and test
-def plot_mse_summary(results):
+def plot_mse_summary(results, metric = 'mse'):
 
+    
     summary_data = []
     for model_type, res in results.items():
-        train_mean = np.mean(res['train_mse'])
-        train_std = np.std(res['train_mse'])
-        test_mean = np.mean(res['test_mse'])
-        test_std = np.std(res['test_mse'])
+        train_mean = np.mean(res['train_' + metric])
+        train_std = np.std(res['train_' + metric])
+        test_mean = np.mean(res['test_' + metric])
+        test_std = np.std(res['test_' + metric])
 
         summary_data.append({
             'Model': model_type,
             'Dataset': 'Train',
-            'Mean_MSE': train_mean,
-            'Std_MSE': train_std
+            'Mean_' + metric.upper(): train_mean,
+            'Std_' + metric.upper(): train_std
         })
         summary_data.append({
             'Model': model_type,
             'Dataset': 'Test',
-            'Mean_MSE': test_mean,
-            'Std_MSE': test_std
+            'Mean_' + metric.upper(): test_mean,
+            'Std_' + metric.upper(): test_std
         })
 
     summary_df = pd.DataFrame(summary_data)
@@ -116,15 +133,15 @@ def plot_mse_summary(results):
         df_subset = summary_df[summary_df['Dataset'] == dataset]
         fig.add_trace(go.Bar(
             x=df_subset['Model'],
-            y=df_subset['Mean_MSE'],
-            name=f'{dataset} Mean MSE',
-            error_y=dict(type='data', array=df_subset['Std_MSE'], visible=True),
+            y=df_subset['Mean_' + metric.upper()],
+            name=f'{dataset} Mean ' + metric.upper(),
+            error_y=dict(type='data', array=df_subset['Std_' + metric.upper()], visible=True),
         ))
 
     fig.update_layout(
-        title='Mean and Std Comparison about MSE for each model',
+        title=f'Mean and Std Comparison about {metric.upper()} for each model',
         xaxis_title='Model',
-        yaxis_title='Mean Squared Error (MSE)',
+        yaxis_title=f'Mean Squared Error ({metric.upper()})',
         barmode='group',
         legend_title='Dataset',
         template='plotly_white'
