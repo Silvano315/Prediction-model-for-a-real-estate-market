@@ -2,7 +2,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
-from scipy.stats import skew
+from scipy.stats import skew, skewtest
+from sklearn.metrics import mean_squared_error, r2_score
+from src.models import train_model
 
 
 # Function to view model performances for a specific metric ['mse', 'r2', 'rmse']
@@ -81,6 +83,7 @@ def plot_residuals_and_scatter(y_true_fold, y_pred_fold, model_type, fold = None
     mean_residuals = np.mean(residuals)
     std_residuals = np.std(residuals)
     skewness = skew(residuals)
+    _, p_value = skewtest(residuals)
     
     fig, axs = plt.subplots(1, 2, figsize=(14, 6))
     
@@ -94,7 +97,7 @@ def plot_residuals_and_scatter(y_true_fold, y_pred_fold, model_type, fold = None
     axs[0].set_ylabel('Density')
     axs[0].axvline(0, color='red', linestyle='--')
     axs[0].text(0.95,0.95, 
-                f'Mean: {mean_residuals:.2f}\nStd: {std_residuals:.2f}\nSkewness: {skewness:.2f}',
+                f'Mean: {mean_residuals:.2f}\nStd: {std_residuals:.2f}\nSkewness: {skewness:.2f}\nSkewtest p-value: {p_value:.2e}',
                 transform=axs[0].transAxes, fontsize=12, 
                 ha='right', va='top', 
                 bbox=dict(facecolor='white', alpha=0.5))
@@ -108,3 +111,41 @@ def plot_residuals_and_scatter(y_true_fold, y_pred_fold, model_type, fold = None
     axs[1].set_ylabel('Predicted Values')
     
     plt.show()
+
+
+# Function to plot coefficients vs alpha values
+def plot_coefficients_vs_alpha(X_train, y_train, X_test, y_test, alpha_values, model_types=['ridge', 'lasso', 'elasticnet'], l1_ratio=0.5):
+    coefficients_dict = {model_type: [] for model_type in model_types}
+
+    for alpha in alpha_values:
+        print("-"*30)
+        print(f"- Training models with alpha = {alpha}")
+        for model_type in model_types:
+            model = train_model(X_train, y_train, model_type=model_type, alpha=alpha, l1_ratio=l1_ratio)
+            coefficients_dict[model_type].append(model.coef_)
+            """print(f'{model_type.capitalize()} model perfomances:')
+            y_test_pred = model.predict(X_test)
+            mse_test = mean_squared_error(y_test, y_test_pred)
+            r2_test = r2_score(y_test, y_test_pred)
+            print(f'Mean Squared Error for Test set: {mse_test:.2f}')
+            print(f'R^2 Score for Test set: {r2_test:.4f}')"""
+
+    print("-"*30)
+
+    for model_type in model_types:
+        coefficients_dict[model_type] = np.array(coefficients_dict[model_type])
+
+    for index, alpha in enumerate(alpha_values):
+        fig = plt.figure(figsize=(10,6))
+        for model_type in model_types:
+            plt.plot(range(X_train.shape[1]), coefficients_dict[model_type][index,:], marker = 'o', label = model_type)
+
+        ymin, ymax = plt.ylim()
+        yticks = np.arange(np.floor(ymin / 1e6) * 1e6, np.ceil(ymax / 1e6) * 1e6 + 0.3*1e6, 0.3*1e6)
+        plt.yticks(yticks)
+        
+        plt.xlabel('Coefficient Index')
+        plt.ylabel('Coefficient Value')
+        plt.title(f'Coefficient Values for Alpha = {alpha}')
+        plt.legend(loc='upper right')
+        plt.show()
