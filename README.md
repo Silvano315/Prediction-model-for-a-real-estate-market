@@ -73,7 +73,21 @@ In the [`results_viz.py`](src/results_viz.py) file, I have created functions to 
 
 ## Results
 
-**TBD**
+The detailed description of the results, including both the Exploratory Data Analysis (EDA) and model performance evaluations, can be found in the markdown cells of the [notebook](prediction_model.ipynb). It is highly recommended to view the results directly within the notebook, as interactive **Plotly** graphs have been utilized for a more dynamic exploration of the data.
+
+### Key Findings:
+
+- **Results Comparison in Bar Plots (cross-validated results):**
+    * With a parameter configuration of alpha = 0.1 and l1_ratio = 0.5 for Elastic Net, it was observed that Linear Regression, Lasso, and Ridge performed quite similarly. Ridge seemed to achieve the best results for both the test and training datasets.
+
+- **Models Complexity Comparison with Non-Zero Coefficients (cross-validated results):**
+    * As expected, Linear Regression has no zero coefficients, and the regularization methods set only a few coefficients to zero, confirming the importance of most features.
+    * Interestingly, Lasso has fewer zero-coefficients than initially expected!
+
+- **Models Coefficients Trend in Relation to Alpha Regularization Parameter:**
+    * The coefficients distributions for several regularization methods were similar when using low alpha values. However, this situation changed with higher alpha values.
+    * As alpha increased, Ridge seemed to maintain consistent coefficients, while Lasso tended to set coefficients to zero or near zero, as expected.
+
 
 ## Extra: Explainability
 
