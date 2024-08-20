@@ -103,7 +103,6 @@ def evaluate_models_with_kfold(X, y, model_types, k=5, alpha = 1.0, l1_ratio = 0
 
 # Functiom to show a bar chart about mean and std of MSE values for each model and for both train and test
 def plot_mse_summary(results, metric = 'mse'):
-
     
     summary_data = []
     for model_type, res in results.items():
@@ -146,8 +145,6 @@ def plot_mse_summary(results, metric = 'mse'):
         legend_title='Dataset',
         template='plotly_white'
     )
-
-    #fig.show()
 
     return fig, summary_df
 

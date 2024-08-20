@@ -3,7 +3,6 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from scipy.stats import skew, skewtest
-from sklearn.metrics import mean_squared_error, r2_score
 from src.models import train_model
 
 
@@ -33,9 +32,6 @@ def plot_model_performance(results, metric='mse'):
 
     plt.figure(figsize=(14,8))
     sns.barplot(x='Model', y='Mean_' + metric.upper(), hue='Dataset', data=summary_df, errorbar=None)
-
-    #for i, row in summary_df.iterrows():
-    #     plt.text(i//2, row['Mean_' + metric.upper()], f"{row['Mean_' + metric.upper()]:.2f}", ha='center', va='bottom')
     
     plt.title(f'Model Performance Comparison (Mean {metric.upper()})')
     plt.ylabel(f'Mean Squared Error ({metric.upper()})')

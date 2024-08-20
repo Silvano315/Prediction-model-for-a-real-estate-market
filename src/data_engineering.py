@@ -14,9 +14,7 @@ def convert_to_category(df, features):
 
 # Function to check if there are duplicates in the dataset
 def handle_duplicates(df):
-
     duplicates = df.duplicated().sum()
-    
     if duplicates > 0:
         print(f"Number of duplicates: {duplicates}. Shape DF: {df.shape}")
         df_cleaned = df.drop_duplicates()
@@ -27,9 +25,9 @@ def handle_duplicates(df):
 
     return df_cleaned
 
+
 # Function to perform EDA with plotly.express: bar plot for categorical features and histogram for numerical 
 def plot_feature_distribution(df, feature, is_categorical, comparison = None):
-
     if is_categorical:
         value_counts = df.groupby(feature).agg(count=(feature, 'size'), price_mean=('price', 'mean')).reset_index()
         value_counts.columns = [feature, 'count', 'price_mean']
@@ -65,9 +63,9 @@ def apply_encoding(df):
 
     return df_encoded
 
+
 # Function to do Feature Scaling with standardization
 def feature_scaling_standardization(X_train, X_test):
-
     continuous_features = ['area'] 
 
     continuous_transformer = Pipeline(
@@ -82,9 +80,7 @@ def feature_scaling_standardization(X_train, X_test):
     )
 
     X_train_scaled = preprocessing.fit_transform(X_train)
-    #X_train_scaled = pd.DataFrame(X_train_scaled, columns=X_train.columns)
     X_test_scaled = preprocessing.transform(X_test)
-    #X_test_scaled = pd.DataFrame(X_test_scaled, columns=X_test.columns)
 
     feature_names = continuous_features + [col for col in X_train.columns if col not in continuous_features]
     X_train_scaled = pd.DataFrame(X_train_scaled, columns=feature_names)
