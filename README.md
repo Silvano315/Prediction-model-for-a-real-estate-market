@@ -41,7 +41,35 @@ The dataset is structured in such a way as to emphasize the complexity due to th
 
 ## Methods
 
-**TBD**
+To complete all the project requirements, I have created a single [notebook](prediction_model.ipynb) where all operations are performed and results are visualized. Additionally, I have organized the code into a [`src`](src/) folder containing Python files with the methods used in the notebook.
+
+### Data Engineering
+
+In the [`data_engineering.py`](src/data_engineering.py) file, I have gathered all methods for managing dataset preparation, including:
+
+- **Feature Conversion:** Handling and converting categorical and numerical variables.
+- **Duplicate and Missing Data Management:** Functions to identify and handle duplicate and missing values.
+- **Interactive Feature Visualization:** Functions to visualize categorical features through bar plots and numerical features through histograms, both implemented with **Plotly**.
+- **One-Hot Encoding:** Transformation of categorical features into dummy variables.
+- **Standardization:** Functions to standardize numerical features, ensuring they have a distribution with mean 0 and standard deviation 1.
+
+### Model Training & Evaluation
+
+In the [`models.py`](src/models.py) file, I have implemented methods for training and evaluating four regression models:
+
+- **Models:** Linear Regression, Ridge, Lasso, Elastic Net.
+- **Metrics:** Mean Squared Error (MSE), Root Mean Squared Error (RMSE), and R2 Score.
+- **Evaluation:** Training models using both a simple train-test split and K-Fold Cross-Validation.
+- **Result Visualization:** Functions to visualize results through bar charts, showing the mean and standard deviation of the requested metrics for each model.
+- **Model Complexity Evaluation:** Functions to analyze and visualize model complexity by evaluating the number of non-zero coefficients.
+
+### Results Visualization
+
+In the [`results_viz.py`](src/results_viz.py) file, I have created functions to visualize the results using **Matplotlib** and **Seaborn**:
+
+- **Model Performance:** Functions to create bar plots and violin plots to evaluate and compare model performance based on a specific metric.
+- **Residual Evaluation:** For each cross-validation fold, I created a function that generates a histogram of residuals (including mean, standard deviation, and skewness p-value) alongside a scatter plot comparing predicted values with true values.
+- **Coefficient Visualization:** A function to visualize the behavior of model coefficients as the regularization parameter `alpha` varies.
 
 ## Results
 
