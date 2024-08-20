@@ -81,4 +81,7 @@ In the [`results_viz.py`](src/results_viz.py) file, I have created functions to 
 
 ## Requirements
 
-**TBD**
+To run this project, I used a 3.11.x Python version. You need to installed the packages in the [requirements](requirements.txt):
+
+```bash
+pip install -r requirements.txt
