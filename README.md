@@ -11,7 +11,7 @@
 
 ## Introduction
 
-This repository is the third project of the master's degree in AI Engineering with [Profession AI](https://profession.ai), all the credits for the requests and idea go to this team.
+This repository is the third project of the master's degree in AI Engineering with [Profession AI](https://profession.ai), all the credits for the requests and idea go to this team. This project was awarded as the 'Best Project' in August 2024, you can see the LinkedIn post [here](https://www.linkedin.com/feed/update/urn:li:activity:7236997652976988160/).
 
 RealEstateAI Solutions aims to optimize real estate price valuation through the use of advanced regularization techniques in linear regression models. The goal is to provide more accurate and reliable price predicts, reducing the risk of overfitting and improving the generalization ability of the model. In the real estate industry, obtaining accurate property price estimates is crucial to make informed decisions. However, traditional linear regression models can suffer from overfitting, compromising the accuracy of the predicts. Effective regularization methods need to be explored to improve the predictive performance and manage the complexity of the model. By implementing and comparing regularization methods such as Lasso, Ridge and Elastic Net, RealEstateAI Solutions will offer a system capable of providing more accurate and stable real estate price predicts. This will allow real estate agents and investors to make decisions based on more reliable data, increasing their competitiveness in the market.
 
