@@ -91,7 +91,19 @@ The detailed description of the results, including both the Exploratory Data Ana
 
 ## Extra: Explainability
 
-**TBD**
+In this project, **SHAP** (SHapley Additive exPlanations) was implemented to make the machine learning models more interpretable and to understand the internal decision-making process of the predictive models. SHAP allows me to break down each prediction to understand how different features contribute to the final output. The following visualizations, saved in the [`images` folder](images/), were generated using SHAP:
+
+- **Summary Plot**
+- **Feature Importance Plot**
+- **Dependence Plot**
+- **Force Plots**
+
+Incorporating SHAP into this project provided a significant advantage in terms of interpretability. SHAP allowed me to go beyond simple performance metrics and understand **why** certain predictions were made. For instance:
+1. I was able to see that properties with larger areas consistently had positive SHAP values, indicating that larger properties are strong predictors of higher prices.
+2. Binary features like the presence of air conditioning or a guestroom had positive SHAP values when set to 1, revealing that these attributes add significant value to a property.
+3. The SHAP analysis made it easier to identify potential **feature interactions**, such as how the number of bathrooms influences the effect of other features like property area or location.
+  
+This additional layer of insight helps not only in **validating the model** but also in providing real estate agents and decision-makers with a more transparent understanding of which property attributes contribute the most to price estimates. With SHAP, I don't just know the model's prediction but also have a **clear justification** for it, making the model more **trustworthy** in real-world applications.
 
 ## Requirements
 
