@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
+from matplotlib import pyplot as plt
 import plotly.graph_objects as go
 from sklearn.linear_model import LinearRegression, Lasso, Ridge, ElasticNet
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import KFold
+import shap
 from src.constants import RANDOM_SEED
 from src.data_engineering import feature_scaling_standardization
 
@@ -184,3 +186,139 @@ def plot_model_complexity(results):
     )
 
     fig.show()
+
+
+# SHAP algorithm integrated in the same k-folds cross-validation I implemented above
+def SHAP_analysis(X, y, model_types, k=5, alpha=1.0, l1_ratio=0.5):
+    kf_cv = KFold(n_splits=k, shuffle=True, random_state=RANDOM_SEED)
+    
+    results = {model_type: {'train_mse': [], 'test_mse': [], 
+                            'train_r2': [], 'test_r2': [], 
+                            'train_rmse': [], 'test_rmse': [], 
+                            'non_zero_coeff': [], 'shap_values': [], 
+                            'shap_baseline': [], 'instance_indices': [], 
+                            'X_train_scaled': [], 'X_test_scaled': []} 
+               for model_type in model_types}
+    
+    y_true_pred = {model_type: {'y_true': [], 'y_pred': []} for model_type in model_types}
+
+    for i, (idx_train, idx_test) in enumerate(kf_cv.split(X)):
+        print("-" * 30)
+        print(f"Evaluating Fold {i + 1}:")
+        X_train, X_test = X.iloc[idx_train], X.iloc[idx_test]
+        y_train, y_test = y.iloc[idx_train], y.iloc[idx_test]
+        
+        # Standardization
+        X_train_scaled, X_test_scaled = feature_scaling_standardization(X_train, X_test)
+        
+        for model_type in model_types:
+            print(f"Training {model_type.capitalize()} model...")
+            model = train_model(X_train_scaled, y_train, model_type, alpha, l1_ratio)
+
+            # Predictions
+            y_train_pred = model.predict(X_train_scaled)
+            y_test_pred = model.predict(X_test_scaled)
+            y_true_pred[model_type]['y_true'].append(y_test)
+            y_true_pred[model_type]['y_pred'].append(y_test_pred)
+            
+            # Metrics
+            train_mse = mean_squared_error(y_train, y_train_pred)
+            test_mse = mean_squared_error(y_test, y_test_pred)
+            train_r2 = r2_score(y_train, y_train_pred)
+            test_r2 = r2_score(y_test, y_test_pred)
+            train_rmse = np.sqrt(train_mse)
+            test_rmse = np.sqrt(test_mse)
+            non_zero_count = count_non_zero_coefficients(model, X_train_scaled)
+
+            results[model_type]['train_mse'].append(train_mse)
+            results[model_type]['test_mse'].append(test_mse)
+            results[model_type]['train_r2'].append(train_r2)
+            results[model_type]['test_r2'].append(test_r2)
+            results[model_type]['train_rmse'].append(train_rmse)
+            results[model_type]['test_rmse'].append(test_rmse)
+            results[model_type]['non_zero_coeff'].append(non_zero_count)
+
+            # Save scaled data
+            results[model_type]['X_train_scaled'].append(X_train_scaled)
+            results[model_type]['X_test_scaled'].append(X_test_scaled)
+
+            # SHAP values
+            if model_type in ['ridge', 'lasso', 'elasticnet']:
+                explainer = shap.Explainer(model, X_train_scaled)
+                shap_values = explainer(X_test_scaled)
+
+                # Save SHAP values and related information
+                results[model_type]['shap_values'].append(shap_values.values)
+                results[model_type]['shap_baseline'].append(shap_values.base_values)
+                results[model_type]['instance_indices'].append(idx_test.tolist())
+
+        print("-" * 30)
+
+    return results, y_true_pred
+
+
+# Function to combine all shapley values and X test scaled from each fold, after cross-validation
+def combine_shap_data(results, model_type):
+    all_shap_values = []
+    all_X_test_scaled = []
+    
+    for fold_idx in range(len(results[model_type]['shap_values'])):
+        shap_values = results[model_type]['shap_values'][fold_idx]
+        X_test_scaled = results[model_type]['X_test_scaled'][fold_idx]
+        
+        all_shap_values.append(shap_values)
+        all_X_test_scaled.append(X_test_scaled)
+    
+    # Concatenate all SHAP values and X test scaled features
+    combined_shap_values = np.vstack(all_shap_values)
+    combined_X_test_scaled = pd.concat(all_X_test_scaled, ignore_index=True)
+    
+    return combined_shap_values, combined_X_test_scaled
+
+# Summary plot with Shapley values
+def plot_combined_shap_summary(results, model_type):
+    combined_shap_values, combined_X_test_scaled = combine_shap_data(results, model_type)
+    
+    plt.figure(figsize=(10, 6))
+    shap.summary_plot(combined_shap_values, combined_X_test_scaled, show=False)
+    plt.title(f'{model_type.capitalize()} with SHAP algorithm: Summary Plot')
+    plt.savefig(f'images/shap_summary_plot_{model_type}.png')
+    plt.show()
+    plt.close()
+
+# Feature importance plot with Shapley values
+def plot_shap_feature_importance(results, model_type):
+    combined_shap_values, combined_X_test_scaled = combine_shap_data(results, model_type)
+    mean_abs_shap_values = np.mean(np.abs(combined_shap_values), axis=0)
+    feature_importance = pd.Series(mean_abs_shap_values, index=combined_X_test_scaled.columns)
+    feature_importance = feature_importance.sort_values(ascending=True)
+
+    plt.figure(figsize=(10, 6))
+    feature_importance.plot(kind='barh', color='salmon')
+    plt.title(f'{model_type.capitalize()} SHAP Feature Importance')
+    plt.xlabel('Mean |SHAP value|')
+    plt.tight_layout()
+    plt.savefig(f'images/shap_feature_importance_{model_type}.png')
+    plt.show()
+
+# Dependence plot about a single feature or using also an interaction feature
+def plot_shap_dependence_plot(results, model_type, feature_name, interaction_feature=None):
+    combined_shap_values, combined_X_test_scaled = combine_shap_data(results, model_type)
+    
+    plt.figure(figsize=(10, 6))
+    shap.dependence_plot(feature_name, combined_shap_values, combined_X_test_scaled, interaction_index=interaction_feature, show=False)
+    plt.title(f'{model_type.capitalize()} SHAP Dependence Plot for {feature_name}')
+    plt.tight_layout()
+    if interaction_feature:
+        plt.savefig(f'images/shap_dependence_plot_{model_type}_{feature_name}_vs_{interaction_feature}.png')
+    else:
+        plt.savefig(f'images/shap_dependence_plot_{model_type}_{feature_name}_vs_{interaction_feature}.png')
+    plt.show()
+
+# Force Plot for a local explanation with Shapley values
+def plot_shap_force_plot(results, model_type, instance_index):
+    combined_shap_values, combined_X_test_scaled = combine_shap_data(results, model_type)
+    shap_values = combined_shap_values[instance_index, :]
+    base_value = np.mean(results[model_type]['shap_baseline'][0])
+
+    shap.force_plot(base_value, shap_values, combined_X_test_scaled.iloc[instance_index], matplotlib=True)
